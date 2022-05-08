@@ -1,15 +1,14 @@
 package com.example.demo.controllers;
 
+import com.example.demo.models.dtos.requests.ConvertCurrencyReqDTO;
 import com.example.demo.models.dtos.responses.AvailableCurrenciesResDTO;
+import com.example.demo.models.dtos.responses.ConvertCurrencyResDTO;
 import com.example.demo.models.dtos.responses.CurrenciesExchangeRatesResDTO;
 import com.example.demo.services.CurrencyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -34,6 +33,14 @@ public class CurrencyController {
         log.info("Started processing request - getActualExchangeRates");
         List<CurrenciesExchangeRatesResDTO> result = currencyService.getActualExchangeRates(currencies);
         log.info("Finished processing request - getActualExchangeRates");
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping
+    public ResponseEntity<ConvertCurrencyResDTO> convertCurrency(@RequestBody ConvertCurrencyReqDTO request) {
+        log.info("Started processing request - convertCurrency");
+        ConvertCurrencyResDTO result = currencyService.convertCurrency(request);
+        log.info("Finished processing request - convertCurrency");
         return ResponseEntity.ok(result);
     }
 }
