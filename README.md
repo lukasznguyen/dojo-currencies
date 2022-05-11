@@ -11,8 +11,16 @@ To set up all the environments, it is required to have [Docker](https://www.dock
 
 ## Installation
 1. Clone repository.
-2. Open terminal in project root path, example: `desktop/dojo-currencies`
-3. Type in terminal sequentially:
+2. To generate .jar file open terminal in project root path example: `desktop/dojo-currencies`:
+    1. with installed [Maven](https://maven.apache.org/) on your local machine
+   ```
+    mvn clean package
+   ```
+   2. with pre-installed MavenWrapper in [IntelliJ IDEA](https://www.jetbrains.com/idea/)
+   ```
+    ./mvnw clean package 
+   ```
+3. In project root path type in terminal sequentially:
 ```
 docker build -t dojo-currencies:latest -f docker/Dockerfile .
 docker-compose -f docker/docker-compose.yml up
