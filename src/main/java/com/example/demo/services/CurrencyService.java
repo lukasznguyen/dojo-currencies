@@ -1,7 +1,6 @@
 package com.example.demo.services;
 
 import com.example.demo.exceptions.BadRequestException;
-import com.example.demo.models.ApplicationLog;
 import com.example.demo.models.dtos.requests.ConvertCurrencyReqDTO;
 import com.example.demo.models.dtos.responses.AvailableCurrenciesResDTO;
 import com.example.demo.models.dtos.responses.ConvertCurrencyResDTO;
@@ -10,7 +9,6 @@ import com.example.demo.models.enums.ActionType;
 import com.example.demo.nbp.NbpClient;
 import com.example.demo.nbp.dtos.CurrenciesTable;
 import com.example.demo.nbp.dtos.SingleCurrencyDetails;
-import com.example.demo.repositiories.ApplicationLogRepo;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,10 +31,10 @@ public class CurrencyService {
     private final NbpClient nbpClient;
     private final ModelMapper mapper;
     private final String plnCurrencyCode = "PLN";
-    private final ApplicationLogRepo applicationLogRepo;
+    private final LoggingService loggingService;
 
     public List<AvailableCurrenciesResDTO> getAllAvailableCurrencies() {
-        createDatabaseLog(ActionType.GET_AVAILABLE_CURRENCIES, null, null);
+        loggingService.createDatabaseLog(ActionType.GET_AVAILABLE_CURRENCIES, null, null);
         CurrenciesTable currencies = nbpClient.getCurrencies();
         List<AvailableCurrenciesResDTO> result = new ArrayList<>();
         for (SingleCurrencyDetails currencyDetails : currencies.getRates()) {
@@ -52,14 +49,14 @@ public class CurrencyService {
         CurrenciesTable currencies = nbpClient.getCurrencies();
 
         if (Optional.ofNullable(request).isPresent()) {
-            createDatabaseLog(ActionType.GET_ACTUAL_RATE_FOR_CURRENCY, request.toString(), null);
+            loggingService.createDatabaseLog(ActionType.GET_ACTUAL_RATE_FOR_CURRENCY, request.toString(), null);
             List<String> preparedRequest = prepareRequest(request);
             result = currencies.getRates().stream()
                     .filter(currencyDetail -> preparedRequest.contains(currencyDetail.getCode()))
                     .map(currencyDetail -> mapper.map(currencyDetail, CurrenciesExchangeRatesResDTO.class))
                     .collect(Collectors.toList());
         } else {
-            createDatabaseLog(ActionType.GET_ACTUAL_RATE_FOR_CURRENCY, null, null);
+            loggingService.createDatabaseLog(ActionType.GET_ACTUAL_RATE_FOR_CURRENCY, null, null);
             result = currencies.getRates().stream()
                     .map(currencyDetail -> mapper.map(currencyDetail, CurrenciesExchangeRatesResDTO.class))
                     .collect(Collectors.toList());
@@ -67,14 +64,14 @@ public class CurrencyService {
         return result;
     }
 
-    private List<String> prepareRequest(List<String> request) {
+    List<String> prepareRequest(List<String> request) {
         List<String> result = new ArrayList<>();
         request.forEach(currencyCode -> result.add(currencyCode.toUpperCase()));
         return result;
     }
 
     public ConvertCurrencyResDTO convertCurrency(ConvertCurrencyReqDTO request) {
-        createDatabaseLog(ActionType.CALCULATE_EXCHANGE_CURRENCY, null, request.toString());
+        loggingService.createDatabaseLog(ActionType.CALCULATE_EXCHANGE_CURRENCY, null, request.toString());
         validateRequest(request);
         CurrenciesTable currencies = nbpClient.getCurrencies();
         ConvertCurrencyResDTO result;
@@ -86,7 +83,7 @@ public class CurrencyService {
         return result;
     }
 
-    private ConvertCurrencyResDTO calculateResultForPurchaseCase(ConvertCurrencyReqDTO request, CurrenciesTable currencies) {
+    ConvertCurrencyResDTO calculateResultForPurchaseCase(ConvertCurrencyReqDTO request, CurrenciesTable currencies) {
         String currencyCode = request.getCurrencyCodeTo();
         Optional<BigDecimal> purchaseRate = currencies.getRates().stream()
                 .filter(currencyDetails -> currencyDetails.getCode().equalsIgnoreCase(currencyCode))
@@ -108,7 +105,7 @@ public class CurrencyService {
                 .build();
     }
 
-    private ConvertCurrencyResDTO calculateResultForSellingRate(ConvertCurrencyReqDTO request, CurrenciesTable currencies) {
+    ConvertCurrencyResDTO calculateResultForSellingRate(ConvertCurrencyReqDTO request, CurrenciesTable currencies) {
         String currencyCode = request.getCurrencyCodeFrom();
         Optional<BigDecimal> purchaseRate = currencies.getRates().stream()
                 .filter(currencyDetails -> currencyDetails.getCode().equalsIgnoreCase(currencyCode))
@@ -130,7 +127,7 @@ public class CurrencyService {
                 .build();
     }
 
-    private void validateRequest(ConvertCurrencyReqDTO request) {
+    void validateRequest(ConvertCurrencyReqDTO request) {
         String currencyCodeFrom = request.getCurrencyCodeFrom().toUpperCase();
         String currencyCodeTo = request.getCurrencyCodeTo().toUpperCase();
         boolean isAmountNegativeValue = request.getAmount().compareTo(BigDecimal.ZERO) < 0;
@@ -149,15 +146,5 @@ public class CurrencyService {
         if (!isCurrencyFromPLN && !isCurrencyToPLN) {
             throw new BadRequestException("CurrencyFrom or currencyTo should have PLN value");
         }
-    }
-
-    private void createDatabaseLog(ActionType actionType, String requestParams, String requestBody) {
-        ApplicationLog applicationLog = ApplicationLog.builder()
-                .timeStamp(LocalDateTime.now())
-                .applicationAction(actionType)
-                .requestParams(requestParams)
-                .requestBody(requestBody)
-                .build();
-        applicationLogRepo.save(applicationLog);
     }
 }

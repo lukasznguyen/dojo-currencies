@@ -3,11 +3,13 @@ package com.example.demo.models;
 import com.example.demo.models.enums.ActionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
 @Builder
 @AllArgsConstructor
 public class ApplicationLog {
