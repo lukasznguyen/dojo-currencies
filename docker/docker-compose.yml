@@ -1,6 +1,23 @@
 version: '2'
 
 services:
+  app:
+    image: 'docker-spring-boot-postgres:latest'
+    container_name: app
+    build:
+      context: .
+    depends_on:
+      - db
+    environment:
+      - spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQL82Dialect
+      - spring.jpa.hibernate.ddl-auto=update
+      - spring.jpa.hibernate.show-sql=true
+      - spring.jpa.properties.hibernate.format_sql=true
+      - spring.datasource.url=jdbc:postgresql://db:5432/dojo-currencies
+      - spring.datasource.username=postgres
+      - spring.datasource.password=postgres
+      - spring.datasource.driver-class-name=org.postgresql.Driver
+      - nbp.api.url=http://api.nbp.pl/api/exchangerates/tables/c
   db:
     image: 'postgres:13.1-alpine'
     container_name: postgres_container
@@ -11,6 +28,7 @@ services:
     ports:
       - "5432:5432"
     restart: always
+
   pgadmin:
     image: 'dpage/pgadmin4'
     container_name: pgadmin4_container
