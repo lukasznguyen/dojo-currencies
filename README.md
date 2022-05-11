@@ -17,7 +17,7 @@ To set up all the environments, it is required to have [Docker](https://www.dock
 docker build -t dojo-currencies:latest -f docker/Dockerfile .
 docker-compose -f docker/docker-compose.yml up
 ```
-4. To close whole containers:
+4. To close all containers:
 ```
 docker-compose -f docker/docker-compose.yml down
 ```

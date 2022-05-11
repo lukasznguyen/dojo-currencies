@@ -1,11 +1,13 @@
-version: '2'
+version: '3.8'
 
 services:
   app:
-    image: 'docker-spring-boot-postgres:latest'
-    container_name: app
+    image: 'dojo-currencies:latest'
+    container_name: app_container
     build:
-      context: .
+      context: ..
+    ports:
+      - "8080:8080"
     depends_on:
       - db
     environment:
@@ -28,7 +30,6 @@ services:
     ports:
       - "5432:5432"
     restart: always
-
   pgadmin:
     image: 'dpage/pgadmin4'
     container_name: pgadmin4_container
